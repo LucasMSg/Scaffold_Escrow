@@ -30,7 +30,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { getRPCPollTime, Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, EscrowView, TokenView } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -254,6 +254,46 @@ function App(props) {
 
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
+  const balance = useContractReader(readContracts, "ERC721Mintable", "balanceOf", [address]);
+  //const EscrowAdd = readContracts.Escrow.address;
+  //const EscrowAdd = useContractReader(readContracts, "Escrow", "address");
+  const yourBalance = balance && balance.toNumber && balance.toNumber();
+  const [yourCollectibles, setYourCollectibles] = useState();
+
+  useEffect(() => {
+    const updateYourCollectibles = async () => {
+      const collectibleUpdate = [];
+      for (let tokenIndex = 0; tokenIndex < balance; tokenIndex++) {
+        try {
+          console.log("Getting token index", tokenIndex);
+          const tokenId = await readContracts.ERC721Mintable.tokenOfOwnerByIndex(address, tokenIndex);
+          /* const tokenURI = await readContracts.ERC721Mintable.tokenURI(tokenId);
+          console.log("tokenURI", tokenURI); */
+
+          /* const ipfsHash = tokenURI.replace("https://ipfs.io/ipfs/", "");
+          console.log("ipfsHash", ipfsHash); */
+
+          //const jsonManifestBuffer = await getFromIPFS(ipfsHash);
+
+          try {
+            //const jsonManifest = JSON.parse(jsonManifestBuffer.toString());
+            //console.log("jsonManifest", jsonManifest);
+            collectibleUpdate.push({
+              id: tokenId,
+              owner: address /* , uri: tokenURI, owner: address, ...jsonManifest */,
+            });
+          } catch (e) {
+            console.log(e);
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      }
+      setYourCollectibles(collectibleUpdate);
+    };
+    updateYourCollectibles();
+  }, [address, balance, readContracts.ERC721Mintable, yourBalance]);
+
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -303,17 +343,23 @@ function App(props) {
         <Menu.Item key="/debug">
           <Link to="/debug">Debug Contracts</Link>
         </Menu.Item>
-        <Menu.Item key="/hints">
+        {/* <Menu.Item key="/hints">
           <Link to="/hints">Hints</Link>
-        </Menu.Item>
+        </Menu.Item> */}
         <Menu.Item key="/exampleui">
           <Link to="/exampleui">ExampleUI</Link>
         </Menu.Item>
-        <Menu.Item key="/mainnetdai">
+        {/* <Menu.Item key="/mainnetdai">
           <Link to="/mainnetdai">Mainnet DAI</Link>
-        </Menu.Item>
-        <Menu.Item key="/subgraph">
+        </Menu.Item> */}
+        {/*  <Menu.Item key="/subgraph">
           <Link to="/subgraph">Subgraph</Link>
+        </Menu.Item> */}
+        <Menu.Item key="/token">
+          <Link to="/token">ERC721 Token</Link>
+        </Menu.Item>
+        <Menu.Item key="/escrow">
+          <Link to="/escrow">Escrow</Link>
         </Menu.Item>
       </Menu>
 
@@ -331,6 +377,25 @@ function App(props) {
 
           <Contract
             name="YourContract"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+          <Contract
+            name="ERC721Mintable"
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+            //EscrowAdd={EscrowAdd}
+          />
+          <Contract
+            name="Escrow"
             price={price}
             signer={userSigner}
             provider={localProvider}
@@ -389,6 +454,35 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             mainnetProvider={mainnetProvider}
+          />
+        </Route>
+        <Route path="/escrow">
+          <EscrowView
+            tx={tx}
+            writeContracts={writeContracts}
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+            yourCollectibles={yourCollectibles}
+            yourBalance={yourBalance}
+          />
+        </Route>
+        <Route path="/token">
+          <TokenView
+            yourCollectibles={yourCollectibles}
+            yourBalance={yourBalance}
+            tx={tx}
+            writeContracts={writeContracts}
+            price={price}
+            signer={userSigner}
+            provider={localProvider}
+            address={address}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+            //EscrowAdd={EscrowAdd}
           />
         </Route>
       </Switch>
