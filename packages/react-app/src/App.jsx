@@ -256,7 +256,6 @@ function App(props) {
 
   const balance = useContractReader(readContracts, "ERC721Mintable", "balanceOf", [address]);
   //const EscrowAdd = readContracts.Escrow.address;
-  //const EscrowAdd = useContractReader(readContracts, "Escrow", "address");
   const yourBalance = balance && balance.toNumber && balance.toNumber();
   const [yourCollectibles, setYourCollectibles] = useState();
 
@@ -267,6 +266,7 @@ function App(props) {
         try {
           console.log("Getting token index", tokenIndex);
           const tokenId = await readContracts.ERC721Mintable.tokenOfOwnerByIndex(address, tokenIndex);
+
           /* const tokenURI = await readContracts.ERC721Mintable.tokenURI(tokenId);
           console.log("tokenURI", tokenURI); */
 
@@ -392,7 +392,7 @@ function App(props) {
             address={address}
             blockExplorer={blockExplorer}
             contractConfig={contractConfig}
-            //EscrowAdd={EscrowAdd}
+            //escrowAdd={escrowAdd}
           />
           <Contract
             name="Escrow"
@@ -402,6 +402,7 @@ function App(props) {
             address={address}
             blockExplorer={blockExplorer}
             contractConfig={contractConfig}
+            mainnetProvider={mainnetProvider}
           />
         </Route>
         <Route path="/hints">
@@ -468,6 +469,7 @@ function App(props) {
             contractConfig={contractConfig}
             yourCollectibles={yourCollectibles}
             yourBalance={yourBalance}
+            readContracts={readContracts}
           />
         </Route>
         <Route path="/token">
@@ -476,6 +478,7 @@ function App(props) {
             yourBalance={yourBalance}
             tx={tx}
             writeContracts={writeContracts}
+            readContracts={readContracts}
             price={price}
             signer={userSigner}
             provider={localProvider}

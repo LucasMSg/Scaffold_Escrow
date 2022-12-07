@@ -18,13 +18,41 @@ export default function TokenView({
   yourCollectibles,
   yourBalance,
   blockExplorer,
-  //EscrowAdd,
 }) {
   const [transferToAddresses, setTransferToAddresses] = useState({});
+  const [signatures, setSignatures] = useState("");
+  const [userAdd, setUserAdd] = useState();
+  const [tokenId, setTokenId] = useState();
 
   return (
     <div style={{ width: 640, margin: "auto", marginTop: 32, paddingBottom: 32 }}>
-      <h2>{yourBalance + " Tokens " /* + EscrowAdd */}</h2>
+      <h2>{yourBalance + " Tokens"}</h2>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}>
+        <h2>Mint</h2>
+        <Divider />
+        <label>Mint to:</label>
+        <Input
+          onChange={e => {
+            setUserAdd(e.target.value);
+          }}
+        />
+        <label>Token Id:</label>
+        <Input
+          onChange={e => {
+            setTokenId(e.target.value);
+          }}
+        />
+        <Button
+          style={{ marginTop: 8 }}
+          onClick={async () => {
+            const result = await tx(writeContracts.ERC721Mintable.mint(userAdd, tokenId));
+            console.log(result);
+          }}
+        >
+          Mint new token
+        </Button>
+        <p>{signatures}</p>
+      </div>
       <List
         bordered
         dataSource={yourCollectibles}
@@ -48,7 +76,13 @@ export default function TokenView({
                     blockExplorer={blockExplorer}
                     fontSize={16}
                   />
-                  <AddressInput
+                  <label>Transfer to address:</label>
+                  <Input
+                    onChange={e => {
+                      setUserAdd(e.target.value);
+                    }}
+                  />
+                  {/* <AddressInput
                     ensProvider={mainnetProvider}
                     placeholder="transfer to address"
                     value={transferToAddresses[id]}
@@ -57,29 +91,47 @@ export default function TokenView({
                       update[id] = newValue;
                       setTransferToAddresses({ ...transferToAddresses, ...update });
                     }}
-                  />
+                  /> */}
                   <Button
                     onClick={() => {
                       console.log("writeContracts", writeContracts);
-                      tx(writeContracts.YourCollectible.transferFrom(address, transferToAddresses[id], id));
+                      tx(writeContracts.ERC721Mintable.transferFrom(address, userAdd, id));
                     }}
                   >
                     Transfer
                   </Button>
-                  {/* <Button
-                    onClick={async () => {
-                      const result = await tx(writeContracts.ERC721Mintable.approve(id, EscrowAdd));
-                      console.log(result);
-                    }}
-                  >
-                    Escrow Approve
-                  </Button> */}
+                  {
+                    <Button
+                      onClick={async () => {
+                        const result = await tx(
+                          writeContracts.ERC721Mintable.approve(readContracts.Escrow.address, id),
+                        );
+                        console.log(result);
+                      }}
+                    >
+                      Escrow Approve
+                    </Button>
+                  }
                 </div>
               }
             </List.Item>
           );
         }}
       />
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}>
+        <h2>Add feature to Escrow</h2>
+        <Divider />
+        <Button
+          style={{ marginTop: 8 }}
+          onClick={async () => {
+            const result = await tx(writeContracts.Escrow.addFeature(readContracts.ERC721Mintable.address));
+            console.log(result);
+          }}
+        >
+          Add token to escrow
+        </Button>
+        <p>{signatures}</p>
+      </div>
     </div>
   );
 }
